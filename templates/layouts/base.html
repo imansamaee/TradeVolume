@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>
+        Volume - {% block title %}{% endblock %} | Iman Samaee
+    </title>
+
+
+    {% include 'includes/styles.html' %}
+    <!-- Specific CSS goes HERE -->
+    {% block stylesheets %}{% endblock stylesheets %}
+
+
+</head>
+
+<body>
+
+<!-- [ Pre-loader ] start -->
+<div class="loader-bg">
+    <div class="loader-track">
+        <div class="loader-fill"></div>
+    </div>
+</div>
+
+<!-- Top Bar -->
+
+
+<div id="app" class="flex-container">
+    <div class="border border-5 main-area-container" id="main-area-container">{% include 'layouts/navigation.html' %}</div>
+    <div class="border border-5 report-container" id="report-container">{% include 'layouts/report.html' %}</div>
+    <div class="border border-5 cart-container" id="cart-container">{% include 'layouts/chart.html' %}</div>
+    <div class="border border-5 output-container" id="output-container">{% include 'layouts/output.html' %}</div>
+
+</div>
+
+
+
+{% include 'layouts/footer.html' %}
+{% include 'includes/scripts.html' %}
+
+
+</body>
+</html>

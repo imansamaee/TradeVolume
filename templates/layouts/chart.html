@@ -1,0 +1,67 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+
+
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <h6>Chart Area </h6>
+                </li>
+
+
+            </ul>
+            <span class="navbar-text">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+                <li class="nav-item">
+                    <input id="number-of-candles" max="3" min="1" size="2" title="Number of Candles" type="number"
+                           value=200>
+                </li>
+                <li class="nav-item">
+                    <input id="chart-time-frame" size="2" title="Time Frame" value="1m">
+                </li>
+                                    <li class="nav-item">
+                                        <div class="input-group mb-3">
+
+  <select id="chart-pattern" onchange="addPattern()">
+
+    <option value="">Pattern</option>
+    <option value="CDLEVENINGDOJISTAR">EVENING DOJI STAR</option>
+    <option value="CDL2CROWS">2CROWS</option>
+    <option value="CDL3BLACKCROWS">3BLACKCROWS</option>
+          <option value="CDL3INSIDE">3INSIDE</option>
+    <option value="CDL3LINESTRIKE">3LINESTRIKE</option>
+          <option value="CDL3OUTSIDE">3OUTSIDE</option>
+    <option value="CDL3STARSINSOUTH">3STARSINSOUTH</option>
+          <option value="CDL3WHITESOLDIERS">3WHITESOLDIERS </option>
+    <option value="CDLABANDONEDBABY">ABANDONEDBABY</option>
+          <option value="CDLADVANCEBLOCK">ADVANCEBLOCK</option>
+    <option value="CDLBELTHOLD">BELTHOLD</option>
+          <option value="CDLBREAKAWAY">BREAKAWAY</option>
+    <option value="CDLCLOSINGMARUBOZU">CLOSINGMARUBOZU</option>
+          <option value="CDLCONCEALBABYSWALL">CONCEALBABYSWALL</option>
+    <option value="CDLCOUNTERATTACK">COUNTERATTACK</option>
+          <option value="CDLDARKCLOUDCOVER">DARKCLOUDCOVER</option>
+    <option value="CDLDOJISTAR">DOJI STAR </option>
+      <option value="CDLDRAGONFLYDOJI">DRAGON FLY DOJI </option>
+      <option value="CDLEVENINGSTAR">EVENING STAR</option>
+
+  </select>
+</div>
+                </li>
+                <li class="nav-item">
+                    <span class="material-icons" id="chart-auto-update">autorenew</span>
+                </li>
+
+            </ul>
+      </span>
+        </div>
+    </div>
+</nav>
+
+
+<div class="card">
+
+    <div id="chart"></div>
+    <div id="chart-bar"></div>
+</div>

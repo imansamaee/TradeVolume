@@ -1,12 +1,9 @@
-from pandas import DataFrame
-
-from services.plotting.candlestick import draw_chart
+import json
 
 
 class DataObject:
-    def __init__(self, df, symbol):
+    def __init__(self, symbol):
         self.symbol = symbol
-        self.df: DataFrame = df
         self.last = 0
         self.real_last = 0
         self.next_close = 0
@@ -36,5 +33,6 @@ class DataObject:
         else:
             return False
 
-    def draw_chart(self):
-        draw_chart(self.symbol)
+    def to_json(self):
+        return json.loads(json.dumps(self, default=lambda o: o.__dict__,
+                                     sort_keys=True, indent=4))

@@ -1,0 +1,53 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+
+
+        <div class="collapse navbar-collapse" ">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+                <h6>Output Area</h6>
+            </li>
+
+        </ul>
+        <span class="navbar-text">
+        <h6>Output Area</h6>
+      </span>
+    </div>
+    </div>
+</nav>
+<table id="example" class="table table-striped" style="width:100%">
+    <thead>
+    <tr>
+        <th>Symbol</th>
+        <th>Market Cap</th>
+        <th>Price</th>
+        <th>Market Percentage</th>
+        <th>Start date</th>
+        <th>Salary</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for i in data.api_data.tokens %}
+    <tr>
+        <td onclick="updateChartSeries('{{i.name_symbol}}USDT')"  ><a href="#">{{ i.name_symbol }}</a></td>
+        <td  onclick="getTokenInfo('{{i.name_symbol}}')" ><a href="#">{{ i.market_cap }}</a></td>
+        <td>${{ i.price }}</td>
+        <td>{{ i.market_percentage }}%</td>
+        <td>-</td>
+        <td>-</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+    <tfoot>
+    <tr>
+        <th>Name</th>
+        <th>Position</th>
+        <th>Office</th>
+        <th>Age</th>
+        <th>Start date</th>
+        <th>Salary</th>
+    </tr>
+    </tfoot>
+</table>
+
+Z

@@ -1,15 +1,12 @@
-import ccxt
 import pandas as pd
-from ta.momentum import RSIIndicator
-from ta.trend import SMAIndicator
 
-from services.auth.auth import api_secret, api_key
 from services.data.api_data import APIData
 from services.data.data_object import DataObject
-from services.deep.learner import DeepLearner
-
-
+# from services.deep.learner import DeepLearner
 # noinspection PyTypeChecker
+from services.market.symbol import Symbol
+
+
 class State:
     def __init__(self, quoted_asset="USDT", time_frame="1m", test=False, init=False):
         self.init = init
@@ -23,25 +20,24 @@ class State:
         self.symbols = {}
         self.trades = {}
         self.limit = 400
-        self.api_data = APIData()
-        self.exchange_data = ccxt.binance({'apiKey': api_key,
-                                           'secret': api_secret})
-        self.market_data = self.exchange_data.load_markets()
+        self.api_data = APIData(quoted_asset)
         self.test = test
-        self.best_to_buy: DataObject = None
+        self.best_to_buy: DataObject
 
     def update(self):
+        self.api_data.update()
         self.update_df()
 
     def update_df(self, since=None, limit=800, params={}):
         timeframe = self.time_frame
         print('updating assets...')
-        exchange_data = self.exchange_data
-        self.market_data = exchange_data.load_markets()
-        for symbol in self.api_data.trade_symbols:
+        symbols = self.api_data.get_big_symbols(1)
+        print(symbols)
+        for symbol in symbols:
             if symbol not in self.symbols:
                 self.symbols[symbol] = {}
-            market = exchange_data.market(symbol)
+            exchange_data = self.api_data.exchange_data
+            market = self.api_data.exchange_data.market(symbol)
             # binance docs say that the default limit 500, max 1500
             # for futures, max 1000 for spot markets
             # the reality is that the time range wider than 500 candles won't work right
@@ -75,57 +71,31 @@ class State:
             #
             bars = exchange_data.parse_ohlcvs(response, market, timeframe, since, limit)
             df = pd.DataFrame(bars, columns=["time", "open", "high", "low", "close", "volume"])
-            df = df.iloc[:-1, :]
-            real_last = df.iloc[-1]['close']
-            if self.test:
-                df = df.iloc[:-1, :]
             df.title = df.symbol = symbol
-            df.timeframe = timeframe
-            data = DataObject(df, symbol)
-            data.last = df.iloc[-1]['close']
-            data.real_last = real_last
+            data = DataObject(Symbol(symbol, market, df, timeframe))
+            data.last = data.symbol.price = df.iloc[-1]['close']
             self.data_objects[symbol] = data
 
+    def get_token_by_symbol_name(self, name_symbol):
+        return next((i for i in self.api_data.tokens if i.name_symbol == name_symbol), None)
+
+    def get_token_info(self, name_symbol):
+        token = self.get_token_by_symbol_name(name_symbol)
+        for index, item in self.data_objects.items():
+            if name_symbol == item.symbol.market['info']['baseAsset'] or \
+                    name_symbol == item.symbol.market['info']['quoteAsset']:
+                token.data_objects[item.symbol.name] = item
+                print(item.symbol.market['info']['quoteAsset'])
+        return token
+
     def get_overall_df(self):
-        highest_increase = -100
-        counter = 0
-        trade_df = pd.DataFrame()
-        for symbol, data_object in self.data_objects.items():
-            trade_df[symbol + "_trade"] = data_object.df['close'] * data_object.df['volume']
+
         for symbol, data_object in self.data_objects.items():
             df = pd.DataFrame()
             df['time'] = data_object.df['time']
             df['close'] = data_object.df['close']
             df['volume'] = data_object.df['volume']
-            df['sma_200'] = SMAIndicator(close=df['close'], window=200).sma_indicator()
-            df['rsi_14'] = RSIIndicator(close=df['close']).rsi()
-            sma_200 = df.iloc[-1]['sma_200']
-            rsi_14 = df.iloc[-1]['rsi_14']
-
-            # if df.iloc[1]['close'] is None or df.iloc[-1]['close'] < sma_200 or \
-            #         rsi_14 < 50 or \
-            #         abs((df.iloc[-1]['close'] / df.iloc[1]['close'])) > 1.5:
-
-            #     continue
-            df = df.drop(columns=["sma_200", "rsi_14"])
-            df = pd.concat([df, trade_df], axis=1)
-            df['next_close'] = data_object.df.shift(-1)['close']
-            df = df.fillna(0)
-            df.to_csv(f"data/deep/overall/{symbol}.csv", index=False)
-            new_data: DataObject = data_object
-            new_data.df = df
-            new_data.rsi_14 = rsi_14
-            new_data.sma_200 = sma_200
-            learner = DeepLearner(new_data, self.init)
-            learner.data_object.next_close = learner.predict_next_close()
-            if highest_increase < learner.data_object.anticipated_percentage_increase:
-                highest_increase = learner.data_object.anticipated_percentage_increase
-                self.best_to_buy = learner.data_object
-            self.learner[symbol] = learner
-            counter += 1
-            print(counter)
-            # if counter % 3 == 0:
-            #     break
+            s = Symbol(data_object.symbol, data_object.df)
 
     def create_learner_df(self):
         numpy_data = []
@@ -139,3 +109,44 @@ class State:
                           columns=['symbol', 'last', 'real_last', 'next_close', 'anticipated_percentage_increase',
                                    'profit', 'lost', 'test_accuracy', 'sma_200', 'rsi_14'])
         df.to_csv("test.csv")
+
+    # def get_overall_df_deep(self):
+    #     highest_increase = -100
+    #     counter = 0
+    #     trade_df = pd.DataFrame()
+    #     for symbol, data_object in self.data_objects.items():
+    #         trade_df[symbol + "_trade"] = data_object.df['close'] * data_object.df['volume']
+    #     for symbol, data_object in self.data_objects.items():
+    #         df = pd.DataFrame()
+    #         df['time'] = data_object.df['time']
+    #         df['close'] = data_object.df['close']
+    #         df['volume'] = data_object.df['volume']
+    #         df['sma_200'] = SMAIndicator(close=df['close'], window=200).sma_indicator()
+    #         df['rsi_14'] = RSIIndicator(close=df['close']).rsi()
+    #         sma_200 = df.iloc[-1]['sma_200']
+    #         rsi_14 = df.iloc[-1]['rsi_14']
+    #
+    #         # if df.iloc[1]['close'] is None or df.iloc[-1]['close'] < sma_200 or \
+    #         #         rsi_14 < 50 or \
+    #         #         abs((df.iloc[-1]['close'] / df.iloc[1]['close'])) > 1.5:
+    #
+    #         #     continue
+    #         df = df.drop(columns=["sma_200", "rsi_14"])
+    #         df = pd.concat([df, trade_df], axis=1)
+    #         df['next_close'] = data_object.df.shift(-1)['close']
+    #         df = df.fillna(0)
+    #         df.to_csv(f"data/deep/overall/{symbol}.csv", index=False)
+    #         new_data: DataObject = data_object
+    #         new_data.df = df
+    #         new_data.rsi_14 = rsi_14
+    #         new_data.sma_200 = sma_200
+    #         learner = DeepLearner(new_data, self.init)
+    #         learner.data_object.next_close = learner.predict_next_close()
+    #         if highest_increase < learner.data_object.anticipated_percentage_increase:
+    #             highest_increase = learner.data_object.anticipated_percentage_increase
+    #             self.best_to_buy = learner.data_object
+    #         self.learner[symbol] = learner
+    #         counter += 1
+    #         print(counter)
+    #         # if counter % 3 == 0:
+    #         #     break
